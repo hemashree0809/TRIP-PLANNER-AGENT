@@ -1,0 +1,924 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>✈️ Travel Planner Agent — Powered by IBM Granite</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --ibm-blue: #0f62fe;
+      --ibm-blue-dark: #0043ce;
+      --ibm-blue-light: #d0e2ff;
+      --ibm-teal: #009d9a;
+      --bg: #f4f4f4;
+      --surface: #ffffff;
+      --surface-alt: #f9f9f9;
+      --border: #e0e0e0;
+      --text: #161616;
+      --text-muted: #6f6f6f;
+      --success: #24a148;
+      --warning: #f1c21b;
+      --error: #da1e28;
+      --radius: 8px;
+    }
+
+    body {
+      font-family: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ── Header ── */
+    header {
+      background: linear-gradient(135deg, #0f62fe 0%, #0043ce 50%, #001d6c 100%);
+      color: #fff;
+      padding: 0;
+    }
+    .header-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .header-brand { display: flex; align-items: center; gap: 14px; }
+    .header-logo { font-size: 36px; }
+    .header-title { font-size: 22px; font-weight: 700; letter-spacing: -0.3px; }
+    .header-sub { font-size: 13px; opacity: 0.8; margin-top: 2px; }
+    .ibm-badge {
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.3);
+      border-radius: 20px;
+      padding: 6px 14px;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+
+    /* ── Layout ── */
+    .app-layout {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 24px;
+      display: grid;
+      grid-template-columns: 340px 1fr;
+      gap: 24px;
+    }
+    @media (max-width: 900px) {
+      .app-layout { grid-template-columns: 1fr; padding: 16px; }
+    }
+
+    /* ── Card ── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .card-header {
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 600;
+      font-size: 14px;
+      background: var(--surface-alt);
+    }
+    .card-header .icon { font-size: 18px; }
+    .card-body { padding: 18px; }
+
+    /* ── Form ── */
+    .form-group { margin-bottom: 14px; }
+    label { display: block; font-size: 12px; font-weight: 600; color: var(--text-muted); margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.5px; }
+    input, select, textarea {
+      width: 100%;
+      padding: 9px 12px;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      font-size: 14px;
+      font-family: inherit;
+      background: #fff;
+      color: var(--text);
+      transition: border-color 0.15s;
+    }
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: var(--ibm-blue);
+      box-shadow: 0 0 0 2px rgba(15,98,254,0.15);
+    }
+    textarea { resize: vertical; min-height: 70px; }
+
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+    /* ── Buttons ── */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 10px 18px;
+      border: none;
+      border-radius: 4px;
+      font-size: 14px;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .btn-primary { background: var(--ibm-blue); color: #fff; }
+    .btn-primary:hover { background: var(--ibm-blue-dark); }
+    .btn-primary:disabled { background: #c6c6c6; cursor: not-allowed; }
+    .btn-secondary { background: transparent; color: var(--ibm-blue); border: 1px solid var(--ibm-blue); }
+    .btn-secondary:hover { background: var(--ibm-blue-light); }
+    .btn-teal { background: var(--ibm-teal); color: #fff; }
+    .btn-teal:hover { background: #007d7a; }
+    .btn-full { width: 100%; justify-content: center; }
+
+    /* ── Tabs ── */
+    .tabs { display: flex; border-bottom: 1px solid var(--border); background: var(--surface-alt); }
+    .tab {
+      padding: 11px 18px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      border: none;
+      background: none;
+      color: var(--text-muted);
+      border-bottom: 2px solid transparent;
+      transition: all 0.15s;
+      font-family: inherit;
+    }
+    .tab:hover { color: var(--ibm-blue); }
+    .tab.active { color: var(--ibm-blue); border-bottom-color: var(--ibm-blue); font-weight: 600; }
+
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    /* ── Chat ── */
+    .chat-messages {
+      height: 380px;
+      overflow-y: auto;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      background: #fafafa;
+    }
+    .msg {
+      max-width: 85%;
+      padding: 10px 14px;
+      border-radius: 12px;
+      font-size: 14px;
+      line-height: 1.5;
+      white-space: pre-wrap;
+    }
+    .msg-user { align-self: flex-end; background: var(--ibm-blue); color: #fff; border-radius: 12px 12px 2px 12px; }
+    .msg-bot { align-self: flex-start; background: #fff; border: 1px solid var(--border); border-radius: 12px 12px 12px 2px; }
+    .msg-bot .msg-sender { font-size: 11px; font-weight: 700; color: var(--ibm-blue); margin-bottom: 4px; }
+    .msg-typing { align-self: flex-start; padding: 12px 16px; background: #fff; border: 1px solid var(--border); border-radius: 12px; }
+    .typing-dots { display: flex; gap: 4px; }
+    .typing-dots span {
+      width: 7px; height: 7px; border-radius: 50%; background: var(--ibm-blue);
+      animation: bounce 1.2s infinite;
+    }
+    .typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+    .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes bounce { 0%,80%,100% { transform: translateY(0); } 40% { transform: translateY(-6px); } }
+
+    .chat-input-area {
+      display: flex;
+      gap: 8px;
+      padding: 12px;
+      border-top: 1px solid var(--border);
+      background: #fff;
+    }
+    .chat-input-area input { flex: 1; }
+
+    /* ── Result Sections ── */
+    .result-section {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      margin-bottom: 16px;
+      overflow: hidden;
+    }
+    .result-section-header {
+      padding: 10px 14px;
+      font-weight: 600;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      background: var(--surface-alt);
+      user-select: none;
+    }
+    .result-section-header:hover { background: var(--ibm-blue-light); }
+    .result-section-body { padding: 14px; font-size: 13px; line-height: 1.6; white-space: pre-wrap; }
+
+    /* ── Weather Card ── */
+    .weather-main { display: flex; align-items: center; gap: 16px; margin-bottom: 12px; }
+    .weather-icon { font-size: 48px; }
+    .weather-temp { font-size: 36px; font-weight: 700; color: var(--ibm-blue); }
+    .weather-condition { font-size: 16px; color: var(--text-muted); }
+    .weather-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+      gap: 8px;
+      margin-top: 8px;
+    }
+    .weather-day {
+      background: var(--bg);
+      border-radius: 6px;
+      padding: 8px;
+      text-align: center;
+      font-size: 12px;
+    }
+    .weather-day .wd-date { font-weight: 600; color: var(--text-muted); margin-bottom: 4px; }
+    .weather-day .wd-temps { font-weight: 700; color: var(--text); }
+    .weather-day .wd-rain { color: #0043ce; margin-top: 2px; }
+
+    /* ── Budget Card ── */
+    .budget-total {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--ibm-teal);
+      margin-bottom: 4px;
+    }
+    .budget-per { color: var(--text-muted); font-size: 14px; margin-bottom: 12px; }
+    .budget-breakdown { display: grid; gap: 6px; }
+    .budget-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 6px 10px;
+      background: var(--bg);
+      border-radius: 4px;
+      font-size: 13px;
+    }
+    .budget-row .label { color: var(--text-muted); }
+
+    /* ── Transport ── */
+    .transport-options { display: grid; gap: 10px; }
+    .transport-card {
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 12px;
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+    }
+    .transport-card.recommended { border-color: var(--ibm-blue); background: var(--ibm-blue-light); }
+    .transport-icon { font-size: 24px; min-width: 30px; text-align: center; }
+    .transport-label { font-weight: 700; font-size: 14px; }
+    .transport-note { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+    .transport-pros { list-style: none; margin-top: 6px; }
+    .transport-pros li::before { content: '✓ '; color: var(--success); font-weight: 700; }
+    .transport-pros li { font-size: 12px; line-height: 1.5; }
+
+    /* ── Popular destinations ── */
+    .dest-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px; margin-top: 10px; }
+    .dest-card {
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 12px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .dest-card:hover { border-color: var(--ibm-blue); background: var(--ibm-blue-light); }
+    .dest-name { font-weight: 700; font-size: 13px; margin-bottom: 4px; }
+    .dest-highlight { font-size: 12px; color: var(--text-muted); line-height: 1.4; }
+    .dest-style-badge {
+      display: inline-block;
+      background: var(--ibm-blue);
+      color: #fff;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 10px;
+      margin-bottom: 6px;
+      text-transform: uppercase;
+    }
+
+    /* ── Status bar ── */
+    .status-bar {
+      font-size: 12px;
+      padding: 8px 14px;
+      border-top: 1px solid var(--border);
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--surface-alt);
+    }
+    .status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--success); }
+    .status-dot.error { background: var(--error); }
+
+    /* ── Loading spinner ── */
+    .spinner {
+      width: 20px; height: 20px;
+      border: 2px solid var(--border);
+      border-top-color: var(--ibm-blue);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      display: inline-block;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Toast ── */
+    #toast {
+      position: fixed; bottom: 24px; right: 24px;
+      background: #161616; color: #fff;
+      padding: 12px 18px; border-radius: 6px;
+      font-size: 13px; z-index: 9999;
+      transform: translateY(80px); opacity: 0;
+      transition: all 0.3s;
+      max-width: 300px;
+    }
+    #toast.show { transform: translateY(0); opacity: 1; }
+
+    /* ── Tips ── */
+    .tips-list { list-style: none; display: grid; gap: 6px; }
+    .tips-list li { padding: 7px 10px; background: var(--ibm-blue-light); border-radius: 4px; font-size: 13px; }
+    .tips-list li::before { content: '💡 '; }
+
+    .section-sep { height: 1px; background: var(--border); margin: 16px 0; }
+    .text-muted { color: var(--text-muted); font-size: 13px; }
+    .mt-8 { margin-top: 8px; }
+    .empty-state { text-align: center; padding: 32px 16px; color: var(--text-muted); }
+    .empty-state .es-icon { font-size: 48px; margin-bottom: 12px; }
+    .badge { display: inline-block; padding: 2px 9px; border-radius: 12px; font-size: 11px; font-weight: 700; }
+    .badge-blue { background: var(--ibm-blue-light); color: var(--ibm-blue-dark); }
+    .badge-green { background: #defbe6; color: #044317; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="header-brand">
+      <div class="header-logo">✈️</div>
+      <div>
+        <div class="header-title">Travel Planner Agent</div>
+        <div class="header-sub">AI-powered itineraries, weather, budgets & more</div>
+      </div>
+    </div>
+    <div class="ibm-badge">🤖 IBM Granite · watsonx.ai</div>
+  </div>
+</header>
+
+<div class="app-layout">
+
+  <!-- ── LEFT PANEL: Planning Form ── -->
+  <aside>
+    <!-- Trip Form Card -->
+    <div class="card" style="margin-bottom:20px">
+      <div class="card-header"><span class="icon">🗺️</span> Plan a Trip</div>
+      <div class="card-body">
+        <div class="form-group">
+          <label>Destination *</label>
+          <input id="inp-destination" type="text" placeholder="e.g. Kyoto, Japan" />
+        </div>
+        <div class="form-group">
+          <label>Travelling From</label>
+          <input id="inp-origin" type="text" placeholder="e.g. New York, USA" />
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Duration (days) *</label>
+            <input id="inp-duration" type="number" min="1" max="90" placeholder="7" />
+          </div>
+          <div class="form-group">
+            <label>Group Size</label>
+            <input id="inp-groupsize" type="number" min="1" max="50" placeholder="1" />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Budget Level</label>
+            <select id="inp-budget">
+              <option value="budget">Budget</option>
+              <option value="moderate" selected>Moderate</option>
+              <option value="luxury">Luxury</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Travel Style</label>
+            <select id="inp-style">
+              <option value="">Any</option>
+              <option value="culture">Culture</option>
+              <option value="adventure">Adventure</option>
+              <option value="beach">Beach</option>
+              <option value="luxury">Luxury</option>
+              <option value="budget">Budget</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Interests (comma-separated)</label>
+          <input id="inp-interests" type="text" placeholder="food, temples, hiking, museums" />
+        </div>
+        <button class="btn btn-primary btn-full" id="btn-plan" onclick="generateFullPlan()">
+          <span>✈️</span> Generate Full Plan
+        </button>
+      </div>
+    </div>
+
+    <!-- Quick Tools -->
+    <div class="card">
+      <div class="card-header"><span class="icon">⚡</span> Quick Tools</div>
+      <div class="card-body" style="display:flex;flex-direction:column;gap:8px;">
+        <button class="btn btn-secondary btn-full" onclick="quickWeather()">🌤️ Check Weather</button>
+        <button class="btn btn-secondary btn-full" onclick="quickBudget()">💰 Estimate Budget</button>
+        <button class="btn btn-secondary btn-full" onclick="quickDestinations()">🌍 Destination Ideas</button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ── RIGHT PANEL: Results & Chat ── -->
+  <main>
+    <div class="card">
+      <div class="tabs">
+        <button class="tab active" onclick="switchTab('chat')">💬 AI Chat</button>
+        <button class="tab" onclick="switchTab('plan')">📋 Trip Plan</button>
+        <button class="tab" onclick="switchTab('weather')">🌤️ Weather</button>
+        <button class="tab" onclick="switchTab('budget')">💰 Budget</button>
+        <button class="tab" onclick="switchTab('explore')">🌍 Explore</button>
+      </div>
+
+      <!-- Chat Tab -->
+      <div id="tab-chat" class="tab-content active">
+        <div class="chat-messages" id="chat-messages">
+          <div class="msg msg-bot">
+            <div class="msg-sender">TravelBot · IBM Granite</div>
+            Hello! I'm your AI-powered Travel Planner, built on IBM Granite via watsonx.ai. 🌍
+
+I can help you:
+• Plan complete trip itineraries
+• Check weather at your destination
+• Estimate travel budgets
+• Suggest transport & accommodation
+• Recommend must-see attractions
+
+Tell me where you'd like to go, or fill in the form on the left to generate a full plan!
+          </div>
+        </div>
+        <div class="chat-input-area">
+          <input id="chat-input" type="text" placeholder="Ask anything about your trip..."
+            onkeydown="if(event.key==='Enter') sendChat()" />
+          <button class="btn btn-primary" onclick="sendChat()">Send</button>
+        </div>
+        <div class="status-bar">
+          <div class="status-dot" id="status-dot"></div>
+          <span id="status-text">IBM Granite ready</span>
+        </div>
+      </div>
+
+      <!-- Plan Tab -->
+      <div id="tab-plan" class="tab-content">
+        <div id="plan-content" style="padding:16px">
+          <div class="empty-state">
+            <div class="es-icon">📋</div>
+            <div>Your trip plan will appear here.</div>
+            <div class="text-muted mt-8">Fill in the form and click "Generate Full Plan".</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Weather Tab -->
+      <div id="tab-weather" class="tab-content">
+        <div id="weather-content" style="padding:16px">
+          <div class="empty-state">
+            <div class="es-icon">🌤️</div>
+            <div>Weather data will appear here.</div>
+            <div class="text-muted mt-8">Enter a destination and click "Check Weather".</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Budget Tab -->
+      <div id="tab-budget" class="tab-content">
+        <div id="budget-content" style="padding:16px">
+          <div class="empty-state">
+            <div class="es-icon">💰</div>
+            <div>Budget estimate will appear here.</div>
+            <div class="text-muted mt-8">Enter destination + duration, then click "Estimate Budget".</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Explore Tab -->
+      <div id="tab-explore" class="tab-content">
+        <div id="explore-content" style="padding:16px">
+          <div class="empty-state">
+            <div class="es-icon">🌍</div>
+            <div>Loading destination ideas...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<div id="toast"></div>
+
+<script>
+  let sessionId = null;
+
+  // ── Init ────────────────────────────────────────────────────────────────────
+  (async function init() {
+    try {
+      const r = await fetch('/api/session', { method: 'POST' });
+      const d = await r.json();
+      sessionId = d.sessionId;
+      const health = await fetch('/api/health').then(x => x.json());
+      setStatus(health.ibmConfigured ? '✅ IBM Granite connected' : '⚠️ IBM API key not set', health.ibmConfigured);
+    } catch {
+      setStatus('❌ Server not reachable', false);
+    }
+    loadExplore();
+  })();
+
+  // ── Tab switching ────────────────────────────────────────────────────────────
+  function switchTab(name) {
+    document.querySelectorAll('.tab').forEach((t, i) => {
+      const tabs = ['chat', 'plan', 'weather', 'budget', 'explore'];
+      t.classList.toggle('active', tabs[i] === name);
+    });
+    document.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active'));
+    document.getElementById(`tab-${name}`).classList.add('active');
+  }
+
+  // ── Chat ────────────────────────────────────────────────────────────────────
+  async function sendChat() {
+    const input = document.getElementById('chat-input');
+    const msg = input.value.trim();
+    if (!msg) return;
+    input.value = '';
+    appendMsg(msg, 'user');
+    showTyping();
+    try {
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sessionId, message: msg }),
+      });
+      const data = await res.json();
+      hideTyping();
+      appendMsg(data.response || JSON.stringify(data), 'bot');
+      sessionId = data.sessionId || sessionId;
+    } catch (e) {
+      hideTyping();
+      appendMsg('⚠️ Connection error. Please check the server is running.', 'bot');
+    }
+  }
+
+  function appendMsg(text, role) {
+    const box = document.getElementById('chat-messages');
+    const div = document.createElement('div');
+    div.className = role === 'user' ? 'msg msg-user' : 'msg msg-bot';
+    if (role === 'bot') {
+      div.innerHTML = `<div class="msg-sender">TravelBot · IBM Granite</div>${escHtml(text)}`;
+    } else {
+      div.textContent = text;
+    }
+    box.appendChild(div);
+    box.scrollTop = box.scrollHeight;
+  }
+
+  let typingEl = null;
+  function showTyping() {
+    const box = document.getElementById('chat-messages');
+    typingEl = document.createElement('div');
+    typingEl.className = 'msg-typing';
+    typingEl.innerHTML = '<div class="typing-dots"><span></span><span></span><span></span></div>';
+    box.appendChild(typingEl);
+    box.scrollTop = box.scrollHeight;
+  }
+  function hideTyping() { if (typingEl) { typingEl.remove(); typingEl = null; } }
+
+  // ── Full Plan Generator ──────────────────────────────────────────────────────
+  async function generateFullPlan() {
+    const destination = document.getElementById('inp-destination').value.trim();
+    const duration = document.getElementById('inp-duration').value;
+    if (!destination || !duration) { toast('⚠️ Please enter Destination and Duration'); return; }
+
+    const btn = document.getElementById('btn-plan');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span> Generating...';
+
+    try {
+      const body = {
+        destination,
+        origin: document.getElementById('inp-origin').value.trim() || undefined,
+        duration: parseInt(duration),
+        budget: document.getElementById('inp-budget').value,
+        travelStyle: document.getElementById('inp-style').value || undefined,
+        groupSize: parseInt(document.getElementById('inp-groupsize').value || '1'),
+        interests: document.getElementById('inp-interests').value.split(',').map(s => s.trim()).filter(Boolean),
+      };
+
+      const res = await fetch('/api/plan', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      const data = await res.json();
+
+      renderPlan(data);
+      if (data.weather && !data.weather.error) renderWeather(data.weather);
+      if (data.budget && !data.budget.error) renderBudget(data.budget);
+      switchTab('plan');
+
+      // Only show success if Granite actually generated the itinerary
+      if (data.itinerary) {
+        toast('✅ Trip plan generated!');
+      } else if (data.graniteError) {
+        toast('⚠️ Plan loaded — itinerary unavailable (IBM Granite error)', 5000);
+      } else {
+        toast('📋 Plan loaded (weather, budget & transport ready)');
+      }
+    } catch (e) {
+      toast('❌ Error generating plan: ' + e.message);
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = '<span>✈️</span> Generate Full Plan';
+    }
+  }
+
+  // ── Quick Weather ────────────────────────────────────────────────────────────
+  async function quickWeather() {
+    const dest = document.getElementById('inp-destination').value.trim();
+    if (!dest) { toast('⚠️ Enter a destination first'); return; }
+    try {
+      const data = await fetch(`/api/weather/${encodeURIComponent(dest)}`).then(r => r.json());
+      if (data.error) throw new Error(data.error);
+      renderWeather(data);
+      switchTab('weather');
+    } catch (e) { toast('❌ ' + e.message); }
+  }
+
+  // ── Quick Budget ─────────────────────────────────────────────────────────────
+  async function quickBudget() {
+    const destination = document.getElementById('inp-destination').value.trim();
+    const duration = document.getElementById('inp-duration').value;
+    if (!destination || !duration) { toast('⚠️ Enter destination and duration'); return; }
+    try {
+      const data = await fetch('/api/budget', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          destination,
+          duration: parseInt(duration),
+          budgetLevel: document.getElementById('inp-budget').value,
+          groupSize: parseInt(document.getElementById('inp-groupsize').value || '1'),
+          origin: document.getElementById('inp-origin').value.trim() || 'USA',
+        }),
+      }).then(r => r.json());
+      renderBudget(data);
+      switchTab('budget');
+    } catch (e) { toast('❌ ' + e.message); }
+  }
+
+  // ── Explore Destinations ─────────────────────────────────────────────────────
+  async function quickDestinations() {
+    switchTab('explore');
+    loadExplore();
+  }
+
+  async function loadExplore(style = 'all') {
+    try {
+      const data = await fetch(`/api/destinations/popular?style=${style}`).then(r => r.json());
+      renderExplore(data);
+    } catch (e) {
+      document.getElementById('explore-content').innerHTML = '<div class="empty-state"><div>Could not load destinations</div></div>';
+    }
+  }
+
+  // ── Renderers ───────────────────────────────────────────────────────────────
+
+  // Data provenance badge helper
+  function provBadge(type) {
+    const map = {
+      live:      { label: 'Live API data',          color: '#d1fae5', text: '#065f46' },
+      curated:   { label: 'Curated information',    color: '#dbeafe', text: '#1e40af' },
+      ai:        { label: 'AI-generated (IBM Granite)', color: '#ede9fe', text: '#5b21b6' },
+      estimated: { label: 'Estimated — not verified', color: '#fef3c7', text: '#92400e' },
+    };
+    const b = map[type] || map.curated;
+    return `<span style="display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;background:${b.color};color:${b.text};margin-left:6px;vertical-align:middle">${b.label}</span>`;
+  }
+
+  function renderPlan(data) {
+    const el = document.getElementById('plan-content');
+    const currency = data.currency || 'USD';
+    const domesticNote = data.isDomestic ? ' · Domestic trip' : '';
+
+    let html = `<h2 style="margin-bottom:16px;font-size:18px">
+      ✈️ ${escHtml(data.destination)}
+      ${data.origin ? `<span class="text-muted" style="font-size:14px">from ${escHtml(data.origin)}</span>` : ''}
+      <span class="badge badge-blue">${data.duration} days</span>
+      <span class="badge badge-blue" style="margin-left:4px">${currency}${domesticNote}</span>
+    </h2>`;
+
+    // ── Itinerary ────────────────────────────────────────────────────────────
+    if (data.itinerary) {
+      html += collapsible(
+        `📅 Day-by-Day Itinerary ${provBadge('ai')}`,
+        data.itinerary, true
+      );
+    } else {
+      // Granite failed — show actionable error and retry option
+      const errDetail = data.graniteError
+        ? `<div style="font-size:12px;color:#6f6f6f;margin-top:8px;font-family:monospace;word-break:break-word">${escHtml(data.graniteError)}</div>`
+        : '';
+      html += `<div class="result-section" style="border-color:#da1e28">
+        <div class="result-section-header" style="background:#fff1f1;color:#da1e28">
+          ⚠️ Itinerary not generated — IBM Granite unavailable
+        </div>
+        <div class="result-section-body">
+          <p style="margin-bottom:8px">The IBM Granite model did not return an itinerary for this trip. This is usually caused by:</p>
+          <ul style="padding-left:18px;font-size:13px;line-height:1.8">
+            <li>Missing or invalid <strong>WATSONX_API_KEY</strong> in <code>.env</code></li>
+            <li>Missing or invalid <strong>WATSONX_PROJECT_ID</strong> in <code>.env</code></li>
+            <li>The watsonx.ai project is not set up or the model is not provisioned</li>
+            <li>Network or quota issues on the IBM Cloud Lite plan</li>
+          </ul>
+          ${errDetail}
+          <div style="margin-top:12px;display:flex;gap:8px">
+            <button class="btn btn-primary" onclick="generateFullPlan()">🔄 Retry</button>
+            <button class="btn btn-secondary" onclick="switchTab('chat')">💬 Ask in Chat</button>
+          </div>
+          <p style="margin-top:12px;font-size:12px;color:#6f6f6f">
+            Weather, budget and transport data below are still available from their respective APIs.
+          </p>
+        </div>
+      </div>`;
+    }
+
+    // ── Travel Advice ────────────────────────────────────────────────────────
+    if (data.travelAdvice) {
+      html += collapsible(`🧳 Travel Advice & Tips ${provBadge('ai')}`, data.travelAdvice);
+    } else if (data.travelAdviceError) {
+      html += `<div class="result-section">
+        <div class="result-section-header">🧳 Travel Advice — unavailable</div>
+        <div class="result-section-body text-muted">IBM Granite did not return travel advice. Check your API credentials.</div>
+      </div>`;
+    }
+
+    // ── Transport ────────────────────────────────────────────────────────────
+    if (data.transport) {
+      const t = data.transport;
+      let tHtml = `<p style="font-size:12px;color:#6f6f6f;margin-bottom:10px">
+        ${t.isDomestic ? '🏠 Domestic trip' : '🌐 International trip'} — options ranked by practicality for this route.
+      </p><div class="transport-options">`;
+      (t.options || []).forEach(opt => {
+        tHtml += `<div class="transport-card ${opt.recommended ? 'recommended' : ''}">
+          <div class="transport-icon">${opt.icon || '🚀'}</div>
+          <div>
+            <div class="transport-label">${opt.label} ${opt.recommended ? '<span class="badge badge-green">Recommended</span>' : ''}</div>
+            <div class="transport-note">${opt.note || ''}</div>
+            <ul class="transport-pros">${(opt.pros || []).slice(0, 2).map(p => `<li>${p}</li>`).join('')}</ul>
+          </div>
+        </div>`;
+      });
+      tHtml += `</div>`;
+      if (t.generalTips) {
+        tHtml += `<div class="section-sep"></div><ul class="tips-list">${t.generalTips.map(tip => `<li>${tip}</li>`).join('')}</ul>`;
+      }
+      html += collapsible(`🚀 Transport Options ${provBadge('curated')}`, tHtml, false, true);
+    }
+
+    // ── Accommodation ────────────────────────────────────────────────────────
+    if (data.accommodation) {
+      const a = data.accommodation;
+      let aHtml = `<p style="margin-bottom:10px">
+        <strong>Estimated accommodation: ${escHtml(a.estimatedAccommodationCost)}</strong>
+        <br><span style="font-size:11px;color:#6f6f6f">⚠️ ${escHtml(a.dataNote || 'Estimated — not verified')}</span>
+      </p>`;
+      aHtml += `<div style="display:grid;gap:8px">`;
+      (a.options || []).forEach(o => {
+        aHtml += `<div class="budget-row"><span class="label">${escHtml(o.type)}</span><strong>${escHtml(o.priceRange)}</strong></div>`;
+      });
+      aHtml += `</div>`;
+      if (a.bookingTips) {
+        aHtml += `<div class="section-sep"></div><ul class="tips-list">${a.bookingTips.map(t => `<li>${escHtml(t)}</li>`).join('')}</ul>`;
+      }
+      html += collapsible(`🏨 Accommodation ${provBadge('estimated')}`, aHtml, false, true);
+    }
+
+    el.innerHTML = html;
+  }
+
+  function renderWeather(data) {
+    if (data.error) {
+      document.getElementById('weather-content').innerHTML = `<div class="empty-state"><div>⚠️ ${escHtml(data.error)}</div></div>`;
+      return;
+    }
+    const icons = { 'Clear sky': '☀️', 'Partly cloudy': '⛅', 'Overcast': '☁️', 'Rain': '🌧️', 'Snow': '❄️', 'Thunderstorm': '⛈️', 'Foggy': '🌫️' };
+    const icon = Object.entries(icons).find(([k]) => data.current?.condition?.includes(k))?.[1] || '🌡️';
+    const forecastCards = (data.forecast || []).map(d => `
+      <div class="weather-day">
+        <div class="wd-date">${d.date?.slice(5)}</div>
+        <div style="font-size:18px">${d.condition?.includes('rain') || d.condition?.includes('Rain') ? '🌧️' : d.condition?.includes('Cloud') || d.condition?.includes('cloud') ? '☁️' : '☀️'}</div>
+        <div class="wd-temps">${d.maxTemp}° / ${d.minTemp}°</div>
+        <div class="wd-rain">💧${d.precipitation}%</div>
+      </div>`).join('');
+
+    document.getElementById('weather-content').innerHTML = `
+      <div style="font-size:11px;margin-bottom:10px">${provBadge('live')} Data from Open-Meteo API · Updated live</div>
+      <div class="weather-main">
+        <div class="weather-icon">${icon}</div>
+        <div>
+          <div class="weather-temp">${data.current?.temperature}°C</div>
+          <div class="weather-condition">${escHtml(data.current?.condition || '')}</div>
+          <div class="text-muted">${escHtml(data.location?.name || '')}, ${escHtml(data.location?.country || '')}</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:16px;margin-bottom:12px">
+        <span>💧 ${data.current?.humidity}% humidity</span>
+        <span>💨 ${data.current?.windSpeed} km/h wind</span>
+      </div>
+      <div class="weather-grid">${forecastCards}</div>
+      <div class="section-sep"></div>
+      <div style="background:var(--ibm-blue-light);padding:10px;border-radius:6px;font-size:13px">
+        💡 <strong>Travel Tip:</strong> ${escHtml(data.travelTip || '')}
+      </div>`;
+  }
+
+  function renderBudget(data) {
+    if (data.error) {
+      document.getElementById('budget-content').innerHTML = `<div class="empty-state"><div>⚠️ ${escHtml(data.error)}</div></div>`;
+      return;
+    }
+    const b = data.breakdown || {};
+    const currency = data.currency || 'USD';
+    document.getElementById('budget-content').innerHTML = `
+      <div style="font-size:11px;margin-bottom:10px">${provBadge('estimated')} Prices in ${currency} · Based on typical rates, not live pricing</div>
+      <div class="budget-total">${escHtml(data.totalEstimate)}</div>
+      <div class="budget-per">~${escHtml(data.perPersonEstimate)} per person · ${data.duration} days · ${escHtml(data.budgetLevel || '')}</div>
+      <div class="budget-breakdown">
+        ${Object.entries(b).map(([k, v]) => `<div class="budget-row"><span class="label">${escHtml(k.replace(/([A-Z])/g,' $1').trim())}</span><span>${escHtml(String(v))}</span></div>`).join('')}
+      </div>
+      <div class="section-sep"></div>
+      <p style="font-size:11px;color:#6f6f6f;margin-bottom:8px">⚠️ ${escHtml(data.dataNote || 'Estimated prices — not verified.')}</p>
+      <ul class="tips-list">${(data.savingTips || []).map(t => `<li>${escHtml(t)}</li>`).join('')}</ul>`;
+  }
+
+  function renderExplore(destinations) {
+    const styles = ['all', 'adventure', 'culture', 'beach', 'budget', 'luxury'];
+    let html = `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">
+      ${styles.map(s => `<button class="btn btn-secondary" style="font-size:12px;padding:6px 12px" onclick="loadExplore('${s}')">${s.charAt(0).toUpperCase()+s.slice(1)}</button>`).join('')}
+    </div>
+    <div class="dest-grid">`;
+    (destinations || []).forEach(d => {
+      html += `<div class="dest-card" onclick="useDestination('${escAttr(d.name)}')">
+        <div class="dest-style-badge">${d.style || ''}</div>
+        <div class="dest-name">${d.name}</div>
+        <div class="dest-highlight">${d.highlight}</div>
+      </div>`;
+    });
+    html += `</div>`;
+    document.getElementById('explore-content').innerHTML = html;
+  }
+
+  function useDestination(name) {
+    document.getElementById('inp-destination').value = name;
+    switchTab('chat');
+    document.getElementById('chat-input').value = `Tell me about ${name} as a travel destination`;
+    toast(`📍 Selected: ${name}`);
+  }
+
+  // ── Helpers ─────────────────────────────────────────────────────────────────
+  function collapsible(title, content, open = false, rawHtml = false) {
+    const body = rawHtml ? content : `<div>${escHtml(content)}</div>`;
+    return `<div class="result-section">
+      <div class="result-section-header" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'':'none'">
+        ${title} <span style="margin-left:auto">${open ? '▲' : '▼'}</span>
+      </div>
+      <div class="result-section-body" style="display:${open ? '' : 'none'}">${body}</div>
+    </div>`;
+  }
+
+  function escHtml(str) {
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+  function escAttr(str) { return String(str).replace(/'/g,"\\'"); }
+
+  function setStatus(text, ok = true) {
+    document.getElementById('status-text').textContent = text;
+    document.getElementById('status-dot').className = 'status-dot' + (ok ? '' : ' error');
+  }
+
+  function toast(msg, duration = 3000) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), duration);
+  }
+</script>
+</body>
+</html>
