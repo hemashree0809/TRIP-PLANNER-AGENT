@@ -1,0 +1,57 @@
+{
+  "name": "Travel Planner Agent",
+  "description": "AI-powered travel planning assistant built with IBM Granite (watsonx.ai) and LangFlow. Generates personalised itineraries, real-time weather, budget estimates, and context-aware transport recommendations.",
+  "keywords": [
+    "travel",
+    "ai",
+    "ibm-granite",
+    "watsonx",
+    "langflow",
+    "nodejs",
+    "express"
+  ],
+  "website": "https://github.com/[YourUsername]/TravelPlannerAgent",
+  "repository": "https://github.com/[YourUsername]/TravelPlannerAgent",
+  "logo": "https://www.ibm.com/favicon.ico",
+  "success_url": "/",
+  "scripts": {
+    "postdeploy": "echo Travel Planner Agent deployed successfully"
+  },
+  "env": {
+    "WATSONX_API_KEY": {
+      "description": "IBM Cloud API key with access to watsonx.ai. Generate at https://cloud.ibm.com/iam/apikeys",
+      "required": true
+    },
+    "WATSONX_PROJECT_ID": {
+      "description": "watsonx.ai project ID. Found in your IBM Cloud watsonx.ai project settings.",
+      "required": true
+    },
+    "WATSONX_URL": {
+      "description": "watsonx.ai endpoint URL.",
+      "required": false,
+      "value": "https://us-south.ml.cloud.ibm.com"
+    },
+    "GRANITE_MODEL_ID": {
+      "description": "IBM Granite model ID to use for generation.",
+      "required": false,
+      "value": "ibm/granite-4-h-small"
+    },
+    "PORT": {
+      "description": "Port the server listens on.",
+      "required": false,
+      "value": "3000"
+    }
+  },
+  "formation": {
+    "web": {
+      "quantity": 1,
+      "size": "free"
+    }
+  },
+  "buildpacks": [
+    {
+      "url": "heroku/nodejs"
+    }
+  ],
+  "stack": "heroku-24"
+}
